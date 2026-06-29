@@ -1,6 +1,5 @@
 import * as cheerio from 'cheerio';
 import { TfaRecord, SearchPageResult } from '../types/tfa.types';
-import { JSF_FORM} from "../oefa/constants";
 import { logger } from '../utils/logger';
 
 export function parseResultsTable(htmlFragment: string): TfaRecord[] {
@@ -34,7 +33,7 @@ export function parseResultsTable(htmlFragment: string): TfaRecord[] {
         });
     });
 
-    logger.debug(`parseResultsTable: ${records.length} registros parseados`);
+    logger.debug(`Hay: ${records.length} registros parseados`);
     return records;
 }
 
@@ -72,5 +71,3 @@ function buildSuggestedFileName(numeroResolucion: string, numeroExpediente: stri
 function cleanText(raw: string): string {
     return raw.replace(/\s+/g, ' ').trim();
 }
-
-export { JSF_FORM };

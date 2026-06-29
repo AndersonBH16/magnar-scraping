@@ -5,15 +5,22 @@ import {
     extractPartialUpdateContent,
     isPartialResponse
 } from "../oefa/viewStateManager";
-import { buildSearchPayload, buildPaginationPayload} from "../oefa/payloadBuilder";
+import { buildSearchPayload, buildPaginationPayload } from "../oefa/payloadBuilder";
 import { parseResultsTable, parsePaginationInfo } from '../parser/resultParser';
-import { JSF_FORM} from "../oefa/constants";
+import { JSF_FORM } from "../oefa/constants";
 import { TfaRecord } from '../types/tfa.types';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
 import { sleep } from '../utils/sleep';
 
-export async function searchAll(): Promise<TfaRecord[]> {
+export interface SearchAllResult {
+    records: TfaRecord[];
+    finalViewState: string;
+}
+
+export type OnPageParsed = (pageRecords: TfaRecord[], viewState: string, pageNumber: number) => Promise<void>;
+
+export async function searchAll(onPageParsed?: OnPageParsed): Promise<SearchAllResult> {
     logger.info('Starting search');
 
     const { html: initialHtml } = await httpClient.get(config.searchPath);
@@ -23,7 +30,7 @@ export async function searchAll(): Promise<TfaRecord[]> {
     const { html: searchResponse } = await httpClient.postForm(config.searchPath, searchPayload);
 
     if (!isPartialResponse(searchResponse)) {
-        throw new Error('Respuesta inesperada: se esperaba un <partial-response> tras la búsqueda.');
+        throw new Error('Respuesta inesperada: se esperaba un <partial-response> ');
     }
 
     viewState = extractViewStateFromPartialResponse(searchResponse);
@@ -39,6 +46,10 @@ export async function searchAll(): Promise<TfaRecord[]> {
     logger.info(
         `Página 1 de ${paginationInfo.totalPages} obtenida (${allRecords.length} registros). Total esperado: ${paginationInfo.totalRecords}.`
     );
+
+    if (onPageParsed) {
+        await onPageParsed(allRecords, viewState, 1);
+    }
 
     for (let page = 2; page <= paginationInfo.totalPages; page++) {
         await sleep(config.delayBetweenRequestsMs);
@@ -60,8 +71,13 @@ export async function searchAll(): Promise<TfaRecord[]> {
         allRecords.push(...pageRecords);
 
         logger.info(`Página ${page}/${paginationInfo.totalPages} obtenida (${pageRecords.length} registros). Acumulado: ${allRecords.length}.`);
+
+        if (onPageParsed) {
+            await onPageParsed(pageRecords, viewState, page);
+        }
     }
 
     logger.info(`✅ Search completed successfully. Total records retrieved: ${allRecords.length}.`);
-    return allRecords;
+
+    return { records: allRecords, finalViewState: viewState };
 }
