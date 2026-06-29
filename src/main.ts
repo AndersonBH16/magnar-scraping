@@ -1,12 +1,18 @@
 import { logger } from './utils/logger';
-import { config } from './config/env';
+import { searchAll } from './services/searchService';
 
-async function run(): Promise<void> {
-    logger.info('Web Scraping for Magnar');
-    logger.info(`URL: ${config.baseUrl}${config.searchPath}`);
+async function main(): Promise<void> {
+    const records = await searchAll();
+
+    logger.info(`Total de registros: ${records.length}`);
+    logger.info('Primeros 3 registros:');
+    console.log(JSON.stringify(records.slice(0, 3), null, 2));
+
+    logger.info('Últimos 3 registros:');
+    console.log(JSON.stringify(records.slice(-3), null, 2));
 }
 
-run().catch((error) => {
-    logger.error('Error fatal en main()', error);
+main().catch((error) => {
+    logger.error('Error en la prueba de Fase 5', error);
     process.exit(1);
 });

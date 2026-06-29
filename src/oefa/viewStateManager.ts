@@ -7,7 +7,7 @@ export function extractViewStateFromHtml(html: string): string {
     const value = $(`input[name="${JSF_FORM.viewStateInputName}"]`).attr('value');
 
     if (!value) {
-        throw new Error('No se encontró javax.faces.ViewState en el HTML recibido.');
+        throw new Error('javax.faces.ViewState not found.');
     }
     return value;
 }
@@ -18,7 +18,7 @@ export function extractViewStateFromPartialResponse(xml: string): string {
     const match = xml.match(regex);
 
     if (!match || !match[1]) {
-        logger.error('No se pudo extraer ViewState de la respuesta parcial. XML recibido (primeros 500 chars):');
+        logger.error('ViewState cant be found');
         logger.error(xml.substring(0, 500));
         throw new Error('No se encontró javax.faces.ViewState en la respuesta <partial-response>.');
     }

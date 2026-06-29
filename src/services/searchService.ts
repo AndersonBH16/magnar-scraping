@@ -14,7 +14,7 @@ import { logger } from '../utils/logger';
 import { sleep } from '../utils/sleep';
 
 export async function searchAll(): Promise<TfaRecord[]> {
-    logger.info('Iniciando búsqueda completa (todas las páginas)...');
+    logger.info('Starting search');
 
     const { html: initialHtml } = await httpClient.get(config.searchPath);
     let viewState = extractViewStateFromHtml(initialHtml);
@@ -30,7 +30,7 @@ export async function searchAll(): Promise<TfaRecord[]> {
 
     const pgListaContent = extractPartialUpdateContent(searchResponse, JSF_FORM.dataTable.pgListaRegion);
     if (!pgListaContent) {
-        throw new Error('No se pudo extraer el contenido de la tabla de resultados (pgLista).');
+        throw new Error('No se pudo extraer el contenido de la tabla de resultados.');
     }
 
     const allRecords: TfaRecord[] = parseResultsTable(pgListaContent);
