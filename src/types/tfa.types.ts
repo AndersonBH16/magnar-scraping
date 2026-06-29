@@ -6,6 +6,8 @@ export interface TfaRecord {
     numeroResolucionApelacion: string;
     archivoURL: string | null;
     archivoNombreSugerido: string;
+    rowIndex: number;
+    paramUuid: string | null;
 }
 
 export interface SearchPageResult {
