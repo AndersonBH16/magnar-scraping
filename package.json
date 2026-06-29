@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
-    "dev:watch": "nodemon --watch src --ext ts --exec ts-node src/main.ts"
+    "dev:watch": "nodemon --watch src --ext ts --exec ts-node src/main.ts",
+    "test:retry": "ts-node src/scripts/testRetry.ts"
   },
   "keywords": [],
   "author": "",
