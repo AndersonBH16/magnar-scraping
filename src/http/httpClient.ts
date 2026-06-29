@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { config } from '../config/env';
-import { logger } from '../utils/logger';
 import { HttpRequestError } from './httpErrors';
 
 class HttpClient {
@@ -28,24 +27,20 @@ class HttpClient {
     }
 
     private mergeCookies(setCookieHeaders: string[]): void {
-        const existing = new Map<string, string>();
-        this.cookieJar
-            .split(';')
-            .map((c) => c.trim())
-            .filter(Boolean)
-            .forEach((c) => {
-                const [name, value] = c.split('=');
-                if (name) existing.set(name, `${name}=${value}`);
-            });
-
-        setCookieHeaders.forEach((rawCookie) => {
-            const cookiePart = rawCookie.split(';')[0];
-            const [name] = cookiePart.split('=');
-            if (name) existing.set(name.trim(), cookiePart.trim());
+        const newCookies: Record<string, string> = {};
+        this.cookieJar.split(';').forEach((c) => {
+            const [name, value] = c.trim().split('=');
+            if (name) newCookies[name] = value;
         });
 
-        this.cookieJar = Array.from(existing.values()).join('; ');
-        logger.debug(`Cookie jar actualizado: ${this.cookieJar}`);
+        setCookieHeaders.forEach((raw) => {
+            const [name, value] = raw.split(';')[0].trim().split('=');
+            if (name) newCookies[name] = value;
+        });
+
+        this.cookieJar = Object.entries(newCookies)
+            .map(([name, value]) => `${name}=${value}`)
+            .join('; ');
     }
 
     public async get(path: string): Promise<{ html: string; status: number }> {
@@ -68,7 +63,7 @@ class HttpClient {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 Cookie: this.cookieJar,
-                Faces_Request: 'partial/ajax', // header que PrimeFaces suele enviar en AJAX, por consistencia
+                Faces_Request: 'partial/ajax',
             },
         });
 
