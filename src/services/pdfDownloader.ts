@@ -26,7 +26,7 @@ export async function downloadPageRecords(
         results.push(result);
 
         if (!result.success) {
-            appendFailedDownload(record, result.error ?? 'Error desconocido');
+            appendFailedDownload(record, result.error ?? 'Error encontradoo');
         }
 
         logger.info(
@@ -65,7 +65,7 @@ async function downloadOne(record: TfaRecord, viewState: string): Promise<PdfDow
             return {
                 record,
                 success: false,
-                error: `Respuesta no parece un PDF válido (Content-Type: ${headers['content-type']})`,
+                error: `El registro no es un PDF válido (Content-Type: ${headers['content-type']})`,
                 attempts,
             };
         }

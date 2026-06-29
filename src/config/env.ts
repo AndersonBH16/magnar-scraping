@@ -19,6 +19,14 @@ function getEnvBoolean(key: string, fallback: boolean): boolean {
     return raw.toLowerCase() === 'true';
 }
 
+function getEnvMaxPages(key: string): number | null {
+    const raw = process.env[key]?.trim().toLowerCase();
+    if (!raw || raw === 'full') return null;
+
+    const parsed = Number(raw);
+    return Number.isNaN(parsed) || parsed <= 0 ? null : parsed;
+}
+
 export const config = {
     baseUrl: getEnvString('BASE_URL', 'https://publico.oefa.gob.pe'),
     searchPath: getEnvString('SEARCH_PATH', '/repdig/consulta/consultaTfa.xhtml'),
@@ -35,4 +43,5 @@ export const config = {
     logsDir: './logs',
     requestTimeoutMs: getEnvNumber('REQUEST_TIMEOUT_MS', 20000),
     debug: getEnvBoolean('DEBUG', false),
+    maxPages: getEnvMaxPages('MAX_PAGES'),
 } as const;
