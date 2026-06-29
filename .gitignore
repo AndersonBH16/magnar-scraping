@@ -1,2 +1,15 @@
+node_modules/
+dist/
+
+# Scraper generate
+data/output/*.json
+data/pdfs/*.pdf
+!data/output/.gitkeep
+!data/pdfs/.gitkeep
+
+# Logs
+logs/*.log
+!logs/.gitkeep
+
+# Editor / OS
 .idea
-node_modules
