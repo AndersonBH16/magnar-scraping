@@ -13,3 +13,5 @@ logs/*.log
 
 # Editor / OS
 .idea
+.vscode/
+.DS_Store

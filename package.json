@@ -1,6 +1,7 @@
 {
   "name": "magnar-scraping",
   "version": "1.0.0",
+  "description": "Scraper en TypeScript para las Resoluciones del Tribunal de Fiscalización Ambiental (OEFA), construido sobre HTTP + parsing (sin automatización de navegador), con soporte completo para el ciclo de vida JSF/PrimeFaces (ViewState, postbacks AJAX y no-AJAX) y manejo de rate limiting (HTTP 429) con retry y backoff exponencial.",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -9,10 +10,9 @@
     "dev:watch": "nodemon --watch src --ext ts --exec ts-node src/main.ts",
     "test:retry": "ts-node src/scripts/testRetry.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["scraper", "typescript", "jsf", "primefaces", "oefa"],
+  "author": "Anderson Blas",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.18.1",
     "cheerio": "^1.2.0",
