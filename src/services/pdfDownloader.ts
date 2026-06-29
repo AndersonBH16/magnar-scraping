@@ -6,7 +6,9 @@ import { TfaRecord, PdfDownloadResult } from '../types/tfa.types';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
 import { sleep } from '../utils/sleep';
+import { withRetry } from '../utils/retry';
 import { ensureDir, writeFile, getAvailableFilePath } from '../utils/fileSystem';
+import { appendFailedDownload } from '../utils/failedDownloadsLog';
 
 export async function downloadPageRecords(
     records: TfaRecord[],
@@ -23,8 +25,14 @@ export async function downloadPageRecords(
         const result = await downloadOne(record, viewState);
         results.push(result);
 
+        if (!result.success) {
+            appendFailedDownload(record, result.error ?? 'Error desconocido');
+        }
+
         logger.info(
-            `${result.success ? '✅' : '❌'} ${record.numeroResolucionApelacion || record.numeroExpediente}`
+            `${result.success ? '✅' : '❌'} ${record.numeroResolucionApelacion || record.numeroExpediente}${
+                result.attempts > 1 ? ` (${result.attempts} intentos)` : ''
+            }`
         );
     }
 
@@ -37,30 +45,44 @@ async function downloadOne(record: TfaRecord, viewState: string): Promise<PdfDow
     }
 
     const payload = buildPdfDownloadPayload(viewState, record.rowIndex, record.paramUuid);
+    let attempts = 0;
 
     try {
-        const { buffer, headers } = await httpClient.postFormBinary(config.searchPath, payload);
+        const { buffer, headers } = await withRetry(
+            async () => {
+                attempts++;
+                return httpClient.postFormBinary(config.searchPath, payload);
+            },
+            {
+                maxRetries: config.retry.maxRetries,
+                baseDelayMs: config.retry.baseDelayMs,
+                maxDelayMs: config.retry.maxDelayMs,
+                label: record.numeroResolucionApelacion || record.numeroExpediente,
+            }
+        );
 
         if (!isLikelyPdf(buffer)) {
             return {
                 record,
                 success: false,
                 error: `Respuesta no parece un PDF válido (Content-Type: ${headers['content-type']})`,
-                attempts: 1,
+                attempts,
             };
         }
 
         const filePath = resolveFilePath(record);
         writeFile(filePath, buffer);
 
-        return { record, success: true, filePath, attempts: 1 };
+        return { record, success: true, filePath, attempts };
     } catch (error) {
-        const message = error instanceof HttpRequestError
-            ? `HTTP ${error.status}: ${error.message}`
-            : error instanceof Error
-                ? error.message
-                : 'Error desconocido';
-        return { record, success: false, error: message, attempts: 1 };
+        const message =
+            error instanceof HttpRequestError
+                ? `HTTP ${error.status}: ${error.message}`
+                : error instanceof Error
+                    ? error.message
+                    : 'Error desconocido';
+
+        return { record, success: false, error: message, attempts };
     }
 }
 
